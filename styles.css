@@ -1,0 +1,29 @@
+body {
+    margin: 0px;
+}
+
+.inputsContainer {
+    display: block;
+    width: 25vw;
+}
+
+input {
+    width: 7ch;
+}
+
+button {
+    margin: 0px 4px;
+}
+
+.inputRow {
+    display: flex;
+    margin: 5px;
+}
+
+.inputCenterRow {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+

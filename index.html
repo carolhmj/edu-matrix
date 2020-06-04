@@ -1,0 +1,184 @@
+<html>
+    <head>
+        <title>A simple matrix transforms education tool</title>
+        <link rel='stylesheet' href='styles.css'>
+    </head>
+    <body>
+        <div class="inputsContainer">
+            <div class="inputRow">
+                <input type="number" id="translateX" min="-100" max="100"/>
+                <input type="number" id="translateY" min="-100" max="100"/>
+                <input type="number" id="translateZ" min="-100" max="100"/>
+                <button type="button" id="applyTranslate">Translate</button>
+            </div>
+            <div class="inputRow">
+                <input type="number" id="rotateX" min="-360" max="360"/>
+                <input type="number" id="rotateY" min="-360" max="360"/>
+                <input type="number" id="rotateZ" min="-360" max="360"/>
+                <button type="button" id="applyRotate">Rotate</button>
+            </div>
+            <div class="inputRow">
+                <input type="number" id="scaleX" min="-100" max="100"/>
+                <input type="number" id="scaleY" min="-100" max="100"/>
+                <input type="number" id="scaleZ" min="-100" max="100"/>
+                <button type="button" id="applyScale">Scale</button>
+            </div>
+            <div class="inputCenterRow">
+                <button type="button" id="reset">Reset</button>
+            </div>
+        </div>
+
+        <script src="jquery-3.5.1.js"></script>
+        <script type="module">
+            import * as THREE from './build/three.module.js';
+            import {TrackballControls} from './TrackballControls.js';
+
+            const DEG_TO_RAD = Math.PI / 180;
+
+            setupInitialValues();
+            $('#applyTranslate').on('click', applyTranslate);
+            $('#applyRotate').on('click', applyRotate);
+            $('#applyScale').on('click', applyScale);
+            $('#reset').on('click', reset);
+
+            let camera, scene, renderer, mesh, controls;
+
+            init();
+            animate();
+
+            function init() {
+                camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 100);
+                
+                camera.position.z = 10;
+                camera.position.y = 5;
+
+                scene = new THREE.Scene();
+                
+                let geometry = new THREE.BoxGeometry(2, 0.5, 0.5);
+                let material = new THREE.MeshNormalMaterial();
+                
+                mesh = new THREE.Mesh(geometry, material);
+                scene.add(mesh);
+
+                scene.add(new THREE.AxisHelper(3));
+                
+                renderer = new THREE.WebGLRenderer();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                document.body.appendChild(renderer.domElement);
+
+                controls = new TrackballControls(camera, renderer.domElement);
+                controls.rotateSpeed = 1.0;
+                controls.zoomSpeed = 1.2;
+                controls.panSpeed = 0.8;
+            }
+
+            function animate() {
+                requestAnimationFrame(animate);
+                
+                controls.update();
+                renderer.render(scene, camera);
+            }
+
+            function applyTranslate() {
+                const translationMatrix = new THREE.Matrix4();
+                const x = $('#translateX').prop('value');
+                const y = $('#translateY').prop('value');
+                const z = $('#translateZ').prop('value');
+                translationMatrix.set(
+                    1, 0, 0, x,
+                    0, 1, 0, y,
+                    0, 0, 1, z,
+                    0, 0, 0, 1
+                );
+                mesh.applyMatrix4(translationMatrix);
+                
+                setupInitialTranslation();
+            }
+
+            function applyRotate() {
+                const x = $('#rotateX').prop('value') * DEG_TO_RAD;
+                const y = $('#rotateY').prop('value') * DEG_TO_RAD;
+                const z = $('#rotateZ').prop('value') * DEG_TO_RAD;
+                
+                const xRot = new THREE.Matrix4().set(
+                    1,      0     ,     0       , 0,
+                    0, Math.cos(x), -Math.sin(x), 0,
+                    0, Math.sin(x),  Math.cos(x), 0,
+                    0,      0     ,     0       , 1  
+                );
+
+                const yRot = new THREE.Matrix4().set(
+                 Math.cos(y) ,      0     , Math.sin(y) , 0,
+                    0        ,      1     ,     0       , 0,
+                 -Math.sin(y),      0     , Math.cos(y) , 0,
+                    0        ,      0     ,     0       , 1  
+                );
+
+                const zRot = new THREE.Matrix4().set(
+                 Math.cos(z) , -Math.sin(z) ,     0       , 0,
+                 Math.sin(z) ,  Math.cos(z) ,     0       , 0,
+                    0        ,      0       ,     1       , 0,
+                    0        ,      0       ,     0       , 1  
+                );
+                    
+                const rotationMatrix = new THREE.Matrix4();
+                rotationMatrix.copy(zRot);
+                rotationMatrix.multiply(yRot);
+                rotationMatrix.multiply(xRot);
+
+                mesh.applyMatrix4(rotationMatrix);
+
+                setupInitialRotation();
+            }
+
+            function applyScale() {
+                const x = $('#scaleX').prop('value');
+                const y = $('#scaleY').prop('value');
+                const z = $('#scaleZ').prop('value');
+
+                const scaleMatrix = new THREE.Matrix4().set(
+                    x, 0, 0, 0,
+                    0, y, 0, 0,
+                    0, 0, z, 0,
+                    0, 0, 0, 1    
+                );
+
+                mesh.applyMatrix4(scaleMatrix);
+
+                setupInitialScale();
+            }
+
+            function setupInitialValues() {
+                setupInitialTranslation();
+                setupInitialRotation();
+                setupInitialScale();
+            }
+            
+            function setupInitialTranslation() {
+                $('#translateX').prop('value', 0);
+                $('#translateY').prop('value', 0);
+                $('#translateZ').prop('value', 0);
+            }
+            
+            function setupInitialRotation() {
+                $('#rotateX').prop('value', 0);
+                $('#rotateY').prop('value', 0);
+                $('#rotateZ').prop('value', 0);
+            }
+            
+            function setupInitialScale() {
+                $('#scaleX').prop('value', 1);
+                $('#scaleY').prop('value', 1);
+                $('#scaleZ').prop('value', 1);
+            }
+
+            function reset() {
+                const meshMatrix = mesh.matrix;
+                const meshMatrixInverse = new THREE.Matrix4().getInverse(meshMatrix);
+
+                mesh.applyMatrix4(meshMatrixInverse);
+                setupInitialValues();
+            }
+        </script>
+    </body>
+</html>
