@@ -2,6 +2,7 @@
     <head>
         <title>A simple matrix transforms education tool</title>
         <link rel='stylesheet' href='styles.css'>
+        <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@500&display=swap" rel="stylesheet">
     </head>
     <body>
         <div class="inputsContainer">
@@ -28,9 +29,36 @@
             </div>
         </div>
 
+        <div class="displayMatrix">
+            <div class="col0">
+                <div class="el0"></div>
+                <div class="el1"></div>
+                <div class="el2"></div>
+                <div class="el3"></div>
+            </div>
+            <div class="col1">
+                <div class="el0"></div>
+                <div class="el1"></div>
+                <div class="el2"></div>
+                <div class="el3"></div>
+            </div>
+            <div class="col2">
+                <div class="el0"></div>
+                <div class="el1"></div>
+                <div class="el2"></div>
+                <div class="el3"></div>
+            </div>
+            <div class="col3">
+                <div class="el0"></div>
+                <div class="el1"></div>
+                <div class="el2"></div>
+                <div class="el3"></div>
+            </div>
+        </div>
+
         <script src="jquery-3.5.1.js"></script>
         <script type="module">
-            import * as THREE from './build/three.module.js';
+            import * as THREE from './three.module.js';
             import {TrackballControls} from './TrackballControls.js';
 
             const DEG_TO_RAD = Math.PI / 180;
@@ -44,6 +72,7 @@
             let camera, scene, renderer, mesh, controls;
 
             init();
+            showMatrix();
             animate();
 
             function init() {
@@ -93,6 +122,7 @@
                 mesh.applyMatrix4(translationMatrix);
                 
                 setupInitialTranslation();
+                showMatrix();
             }
 
             function applyRotate() {
@@ -129,6 +159,7 @@
                 mesh.applyMatrix4(rotationMatrix);
 
                 setupInitialRotation();
+                showMatrix();
             }
 
             function applyScale() {
@@ -146,6 +177,7 @@
                 mesh.applyMatrix4(scaleMatrix);
 
                 setupInitialScale();
+                showMatrix();
             }
 
             function setupInitialValues() {
@@ -178,6 +210,17 @@
 
                 mesh.applyMatrix4(meshMatrixInverse);
                 setupInitialValues();
+                showMatrix();
+            }
+
+            function showMatrix() {
+                const matrix = mesh.matrix;
+                for (let j = 0; j < 4; j++) {
+                    for (let i = 0; i < 4; i++) {
+                        const el = matrix.elements[j*4+i].toFixed(2);
+                        $(`.col${j} > .el${i}`).html(el);
+                    }
+                }
             }
         </script>
     </body>
